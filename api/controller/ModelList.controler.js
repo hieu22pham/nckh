@@ -49,4 +49,16 @@ const updateProcTime = async (req, res) => {
   }
 };
 
-module.exports = { getProcTime, updateProcTime };
+const getAllData = async (req, res) => {
+  try {
+      const data = await ModelList.findAll({
+          attributes: ['Name', 'NameVNM', 'ProcTime'], // Chỉ lấy các trường cần thiết
+      });
+      res.json(data); // Trả về dữ liệu dạng JSON
+  } catch (error) {
+      console.error('Error fetching data:', error);
+      res.status(500).json({ error: 'An error occurred while fetching data' });
+  }
+};
+
+module.exports = { getProcTime, updateProcTime, getAllData };
