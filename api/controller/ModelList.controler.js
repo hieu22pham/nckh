@@ -52,7 +52,7 @@ const updateProcTime = async (req, res) => {
 const getAllData = async (req, res) => {
   try {
       const data = await ModelList.findAll({
-          attributes: ['Name', 'NameVNM', 'ProcTime', 'NumberProcessed'], // Chỉ lấy các trường cần thiết
+          attributes: ['Name', 'NameVNM', 'ProcTime', 'NumberProcessed', 'Failed'], // Chỉ lấy các trường cần thiết
       });
       res.json(data); // Trả về dữ liệu dạng JSON
   } catch (error) {
@@ -89,6 +89,33 @@ const updateNumberProcessed = async (req, res) => {
   }
 };
 
+const updateNumberProcessedTo0 = async (req, res) => {
+    const { machineName } = req.query; // Lấy tên máy từ query
+  
+    if (!machineName) {
+        return res.status(400).json({ error: 'Machine name is required' });
+    }
+  
+    try {
+        // Tìm kiếm máy trong cơ sở dữ liệu theo tên
+        const machine = await ModelList.findOne({
+            where: { Name: machineName },
+        });
+  
+        if (machine) {
+            // Cập nhật NumberProcessed
+            machine.NumberProcessed = 0; // Tăng giá trị NumberProcessed lên 1
+            await machine.save(); // Lưu thay đổi vào cơ sở dữ liệu
+  
+            res.json({ message: `NumberProcessed for ${machineName} updated successfully`, machine });
+        } else {
+            res.status(404).json({ error: 'Machine not found' });
+        }
+    } catch (error) {
+        console.error('Error updating NumberProcessed:', error);
+        res.status(500).json({ error: 'An error occurred while updating NumberProcessed' });
+    }
+  };
 
 const resetNumberProcessed = async (req, res) => {
     try {
@@ -100,4 +127,34 @@ const resetNumberProcessed = async (req, res) => {
     }
 };
 
-module.exports = { getProcTime, updateProcTime, getAllData, updateNumberProcessed, resetNumberProcessed };
+const updateNumberFailed = async (req, res) => {
+    const { machineName } = req.query; // Lấy tên máy từ query
+
+    if (!machineName) {
+        return res.status(400).json({ error: 'Machine name is required' });
+    }
+
+    try {
+        // Tìm kiếm máy theo tên
+        const machine = await ModelList.findOne({
+            where: { Name: machineName },
+        });
+
+        if (machine) {
+            // Tăng giá trị `Failed` lên 1
+            machine.Failed += 1;
+            await machine.save(); // Lưu thay đổi vào database
+
+            res.json({ message: `NumberFailed for ${machineName} updated successfully`, machine });
+        } else {
+            res.status(404).json({ error: 'Machine not found' });
+        }
+    } catch (error) {
+        console.error('Error updating NumberFailed:', error);
+        res.status(500).json({ error: 'An error occurred while updating NumberFailed' });
+    }
+};
+
+
+module.exports = { getProcTime, updateProcTime, getAllData, updateNumberProcessed, 
+    resetNumberProcessed, updateNumberProcessedTo0, updateNumberFailed };
