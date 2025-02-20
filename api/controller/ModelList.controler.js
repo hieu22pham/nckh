@@ -155,6 +155,36 @@ const updateNumberFailed = async (req, res) => {
     }
 };
 
+const decreaseFailedCount = async (req, res) => {
+    const { machineName } = req.query; // Lấy tên máy từ query
+
+    if (!machineName) {
+        return res.status(400).json({ error: 'Machine name is required' });
+    }
+
+    try {
+        // Tìm kiếm máy theo tên
+        const machine = await ModelList.findOne({
+            where: { Name: machineName },
+        });
+
+        if (machine) {
+            if (machine.Failed > 0) {
+                // Giảm giá trị `Failed` đi 1 nếu lớn hơn 0
+                machine.Failed -= 1;
+                await machine.save(); // Lưu thay đổi vào database
+                res.json({ message: `NumberFailed for ${machineName} decreased successfully`, machine });
+            } else {
+                res.status(400).json({ error: `No failed products to decrease for ${machineName}` });
+            }
+        } else {
+            res.status(404).json({ error: 'Machine not found' });
+        }
+    } catch (error) {
+        console.error('Error decreasing NumberFailed:', error);
+        res.status(500).json({ error: 'An error occurred while decreasing NumberFailed' });
+    }
+};
 
 module.exports = { getProcTime, updateProcTime, getAllData, updateNumberProcessed, 
-    resetNumberProcessed, updateNumberProcessedTo0, updateNumberFailed };
+    resetNumberProcessed, updateNumberProcessedTo0, updateNumberFailed, decreaseFailedCount  };
